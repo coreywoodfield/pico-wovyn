@@ -1,6 +1,8 @@
 ruleset wovyn_base {
   rule process_heartbeat {
     select when wovyn heartbeat
-    send_directive("say", {})
+    if (event:attr("genericThing") != null) then {
+      send_directive("say", {})
+    }
   }
 }
