@@ -5,7 +5,7 @@ ruleset wovyn_base {
       send_directive("say", {})
     fired {
       raise wovyn event "new_temperature_reading"
-        attributes {"temperature": event:attr("genericThing")("data")("temperature"), "timestamp": time:now()}
+        attributes {"temperature": event:attr("genericThing"){"data"}{"temperature"}, "timestamp": time:now()}
     }
   }
 }
