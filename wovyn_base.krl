@@ -1,6 +1,15 @@
 ruleset wovyn_base {
+  meta {
+    use module keys
+    use module twilio
+      with account_sid = keys:twilio{"account_sid"}
+           auth_token = keys:twilio{"auth_token"}
+  }
+
   global {
     temperature_threshold = 72
+    notify_me = "Not my real number"
+    from = "Also not a real number"
   }
 
   rule process_heartbeat {
@@ -17,14 +26,17 @@ ruleset wovyn_base {
 
   rule find_high_temps {
     select when wovyn new_temperature_reading
-    if (event:attr("temperature")) then
+    if (event:attr("temperature").any(function(x){
+      x{"temperatureF"} > temperature_threshold
+    })) then
       send_directive("say", "High temp found")
     fired {
-      raise wovyn event "threshold_violation" attributes event:attrs()
+      raise wovyn event "threshold_violation" attributes event:attrs
     }
   }
 
   rule threshold_notification {
     select when wovyn threshold_violation
+    twilio:send_sms(notify_me, from, "Temperature over defined threshold")
   }
 }
