@@ -6,37 +6,46 @@ ruleset temperature_store {
 
   global {
     temperatures = function() {
-      ent:store.defaultsTo([])
+      ent:store
     }
 
     threshold_violations = function() {
-      ent:violations.defaultsTo([])
+      ent:violations
     }
 
     inrange_temperatures = function() {
-      ent:store.defaultsTo([]).filter(function(x){not (x >< ent:violations)})
+      ent:store.filter(function(x){not (ent:violations >< x)})
     }
   }
 
   rule collect_temperatures {
     select when wovyn new_temperature_reading
     always {
-      ent:store := ent:store.defaultsTo([]).append([event:attrs])
+      ent:store := ent:store.append([event:attrs])
     }   
   }
 
   rule collect_threshold_violations {
     select when wovyn threshold_violation
     always {
-      ent:violations := ent:violations.defaultsTo([]).append([event:attrs])
+      ent:violations := ent:violations.append([event:attrs])
     }
   }
 
   rule clear_temperatures {
     select when sensor reading_reset
     always {
-      clear ent:store;
-      clear ent:violations
+      ent:store := [];
+      ent:violations := []
+    }
+  }
+
+  rule intialization {
+    select when wrangler ruleset_added where rids >< meta:rid
+    if ent:store.isnull() && ent:violations.isnull() then noop();
+    fired {
+      ent:store := [];
+      ent:violations := []
     }
   }
 }
