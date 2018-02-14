@@ -21,14 +21,18 @@ ruleset temperature_store {
   rule collect_temperatures {
     select when wovyn new_temperature_reading
     always {
-      ent:store := ent:store.append([event:attrs])
+      ent:store := ent:store.append(event:attr("temperature").map(function(x){
+        {"temperature": x{"temperatureF"}, "timestamp": event:attr("timestamp")}
+      }))
     }   
   }
 
   rule collect_threshold_violations {
     select when wovyn threshold_violation
     always {
-      ent:violations := ent:violations.append([event:attrs])
+      ent:violations := ent:violations.append(event:attr("temperature").map(function(x){
+        {"temperature": x{"temperatureF"}, "timestamp": event:attr("timestamp")}
+      }))
     }
   }
 
