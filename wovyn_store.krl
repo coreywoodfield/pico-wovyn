@@ -6,29 +6,29 @@ ruleset temperature_store {
 
   global {
     temperatures = function() {
-      ent:store
+      ent:store.defaultsTo([])
     }
 
     threshold_violations = function() {
-      ent:violations
+      ent:violations.defaultsTo([])
     }
 
     inrange_temperatures = function() {
-      ent:store.filter(function(x){not (x >< ent:violations)})
+      ent:store.defaultsTo([]).filter(function(x){not (x >< ent:violations)})
     }
   }
 
   rule collect_temperatures {
     select when wovyn new_temperature_reading
     always {
-      ent:store := ent:store.append([event:attrs])
+      ent:store := ent:store.defaultsTo([]).append([event:attrs])
     }   
   }
 
   rule collect_threshold_violations {
     select when wovyn threshold_violation
     always {
-      ent:violations := ent:violations.append([event:attrs])
+      ent:violations := ent:violations.defaultsTo([]).append([event:attrs])
     }
   }
 
