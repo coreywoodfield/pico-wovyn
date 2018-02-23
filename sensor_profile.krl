@@ -18,7 +18,10 @@ ruleset sensor_profile {
   rule profile_update {
     select when sensor profile_updated
     always {
-      ent:threshold := event:attr
+      ent:threshold := event:attr("threshold");
+      ent:number := event:attr("number");
+      ent:location := event:attr("location");
+      ent:name := event:attr("name")
     }
   }
 
