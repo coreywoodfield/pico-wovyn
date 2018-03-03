@@ -9,8 +9,8 @@ ruleset manage_sensors {
       name = event:attr("name")
       exists = ent:sensors >< name
     }
-    if exists then noop();
-    fired {
+    if exists then send_directive("say", "Sensor already exists");
+    notfired {
       raise wrangler event "child_creation" attributes {
           "name": name,
           "rids": ["temperature_store", "wovyn_base", "sensor_profile"]
