@@ -1,6 +1,10 @@
 ruleset manage_sensors {
   global {
     threshold = 75
+
+    sensors = function() {
+      ent:sensors
+    }
   }
 
   rule create_sensor_pico {
@@ -9,7 +13,7 @@ ruleset manage_sensors {
       name = event:attr("name")
       exists = ent:sensors >< name
     }
-    if exists then send_directive("say", "Sensor already exists");
+    if exists then send_directive("Sensor already exists");
     notfired {
       raise wrangler event "child_creation" attributes {
           "name": name,
@@ -37,6 +41,19 @@ ruleset manage_sensors {
     })
     always {
       ent:sensors := ent:sensors.put(event:attr("name"), eci)
+    }
+  }
+
+  rule unneeded_sensor {
+    select when sensor unneeded_sensor
+    pre {
+      name = event:attr("name")
+      exists = ent:sensors >< name
+    }
+    if exists then send_directive("deleting child");
+    fired {
+      raise wrangler event "child_deletion" attributes { "name": name };
+      ent:sensors := ent:sensors.delete(name)
     }
   }
 
