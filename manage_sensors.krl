@@ -12,7 +12,10 @@ ruleset manage_sensors {
     }
 
     temperatures = function() {
-      wrangler:skyQuery("7nkYU8fKhkhuwF1L3BLuKm", "temperature_store", "temperatures")
+      temps = ent:sensors.values().map(function(eci) {
+        wrangler:skyQuery(eci, "temperature_store", "temperatures")
+      });
+      temps.reduce(function(a,b) {a.append(b)}, [])
     }
   }
 
