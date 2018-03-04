@@ -1,9 +1,18 @@
 ruleset manage_sensors {
+  meta {
+    use module io.picolabs.wrangler alias wrangler
+    shares sensors, temperatures
+  }
+
   global {
     threshold = 75
 
     sensors = function() {
       ent:sensors
+    }
+
+    temperatures = function() {
+      wrangler:skyQuery("7nkYU8fKhkhuwF1L3BLuKm", "temperature_store", "temperatures")
     }
   }
 
@@ -52,7 +61,7 @@ ruleset manage_sensors {
     }
     if exists then send_directive("deleting child");
     fired {
-      raise wrangler event "child_deletion" attributes { "name": name };
+      raise wrangler event "child_deletion" attributes {"name": name};
       ent:sensors := ent:sensors.delete(name)
     }
   }
