@@ -1,6 +1,7 @@
 ruleset manage_sensors {
   meta {
     use module io.picolabs.wrangler alias wrangler
+    use module io.picolabs.subscription alias subs
     shares sensors, temperatures
   }
 
@@ -12,8 +13,9 @@ ruleset manage_sensors {
     }
 
     temperatures = function() {
-      temps = ent:sensors.values().map(function(eci) {
-        wrangler:skyQuery(eci, "temperature_store", "temperatures")
+      sensors = subs:established("Tx_role", "sensor");
+      temps = sensors.map(function(sensor) {
+        wrangler:skyQuery(sensor{"Tx"}, "temperature_store", "temperatures")
       });
       temps.reduce(function(a,b) {a.append(b)}, [])
     }
