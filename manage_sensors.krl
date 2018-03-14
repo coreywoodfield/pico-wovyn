@@ -29,7 +29,7 @@ ruleset manage_sensors {
     notfired {
       raise wrangler event "child_creation" attributes {
           "name": name,
-          "rids": ["temperature_store", "wovyn_base", "sensor_profile", "io.picolabs.subscription"]
+          "rids": ["temperature_store", "wovyn_base", "sensor_profile", "io.picolabs.subscription", "auto_accept"]
       }
     }
   }
@@ -52,6 +52,13 @@ ruleset manage_sensors {
       }
     })
     always {
+      raise wrangler event "subscription" attributes {
+        "name": name,
+        "Rx_role": "manager",
+        "Tx_role": "sensor",
+        "channel_type": "subscription",
+        "wellKnown_Tx": eci
+      };
       ent:sensors := ent:sensors.put(event:attr("name"), eci)
     }
   }
