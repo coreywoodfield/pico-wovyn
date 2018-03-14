@@ -65,6 +65,26 @@ ruleset manage_sensors {
     }
   }
 
+  rule register_sensor {
+    select when sensor register
+    pre {
+      name = event:attr("name")
+      eci = event:attr("eci")
+      exists = ent:sensors >< name
+    }
+    if exists then send_directive("Sensor already exists");
+    notfired {
+      raise wrangler event "subscription" attributes {
+        "name": name,
+        "Rx_role": "manager",
+        "Tx_role": "sensor",
+        "channel_type": "subscription",
+        "wellKnown_Tx": eci
+      };
+      ent:sensors := ent:sensors.put(name, eci)
+    }
+  }
+
   rule unneeded_sensor {
     select when sensor unneeded_sensor
     pre {
