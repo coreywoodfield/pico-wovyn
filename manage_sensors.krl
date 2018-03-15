@@ -16,7 +16,7 @@ ruleset manage_sensors {
       sensors = subs:established("Tx_role", "sensor");
       temps = sensors.map(function(sensor) {
         wrangler:skyQuery(sensor{"Tx"}, "temperature_store", "temperatures")
-      });
+      }).filter(function(x){not (x >< "error")});
       temps.reduce(function(a,b) {a.append(b)}, [])
     }
   }
@@ -70,6 +70,7 @@ ruleset manage_sensors {
     pre {
       name = event:attr("name")
       eci = event:attr("eci")
+      host = event:attr("host")
       exists = ent:sensors >< name
     }
     if exists then send_directive("Sensor already exists");
@@ -79,7 +80,8 @@ ruleset manage_sensors {
         "Rx_role": "manager",
         "Tx_role": "sensor",
         "channel_type": "subscription",
-        "wellKnown_Tx": eci
+        "wellKnown_Tx": eci,
+        "Tx_host": host
       };
       ent:sensors := ent:sensors.put(name, eci)
     }
