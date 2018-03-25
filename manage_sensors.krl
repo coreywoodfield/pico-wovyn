@@ -2,7 +2,7 @@ ruleset manage_sensors {
   meta {
     use module io.picolabs.wrangler alias wrangler
     use module io.picolabs.subscription alias subs
-    shares sensors, temperatures
+    shares sensors, temperatures, reports
   }
 
   global {
@@ -18,6 +18,12 @@ ruleset manage_sensors {
         wrangler:skyQuery(sensor{"Tx"}, "temperature_store", "temperatures")
       }).filter(function(x){not (x >< "error")});
       temps.reduce(function(a,b) {a.append(b)}, [])
+    }
+
+    reports = function() {
+      reports = ent:reports.defaultsTo({}).values();
+      length = reports.length();
+      (length > 5) => reports.splice(length - 5, length) | reports
     }
   }
 
