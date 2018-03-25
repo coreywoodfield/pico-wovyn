@@ -21,6 +21,45 @@ ruleset manage_sensors {
     }
   }
 
+  rule request_temp_report {
+    select when sensor request_report
+    foreach subs:established("Tx_role", "sensor") setting (sensor)
+    pre {
+      eci = sensor{"Tx"}
+      my_eci = sensor{"Rx"}
+      rcn = ent:rcn.defaultsTo(0)
+      reports = ent:reports.defaultsTo({})
+    }
+    event:send({
+      "eci": eci,
+      "eid": "whatever",
+      "domain": "wovyn",
+      "type": "report_requested",
+      "attrs": {
+        "eci": my_eci,
+        "you": eci,
+        "rcn": rcn
+      }
+    })
+    always {
+      ent:reports{rcn} := {"responders":0, "temperatures":[]};
+      ent:rcn := rcn + 1 on final
+    }
+  }
+
+  rule report_received {
+    select when sensor report
+    pre {
+      rcn = event:attr("rcn")
+      temps = event:attr("temps")
+    }
+    noop()
+    always {
+      ent:reports{[rcn, "responders"]} := ent:reports{[rcn, "responders"]} + 1;
+      ent:reports{[rcn, "temperatures"]} := ent:reports{[rcn, "temperatures"]}.append(temps)
+    }
+  }
+
   rule create_sensor_pico {
     select when sensor new_sensor
     pre {

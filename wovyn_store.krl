@@ -18,6 +18,20 @@ ruleset temperature_store {
     }
   }
 
+  rule report_temperatures {
+    select when wovyn report_requested
+    event:send({
+      "eci": event:attr("eci"),
+      "eid": "whatever",
+      "domain": "sensor",
+      "type": "report",
+      "attrs": {
+        "rcn": event:attr("rcn"),
+        "temps": temperatures()
+      }
+    })
+  }
+
   rule collect_temperatures {
     select when wovyn new_temperature_reading
     always {
