@@ -2,7 +2,7 @@ ruleset gossip {
   meta {
     use module io.picolabs.subscription alias subs
     shares getId
-    provides getTemps
+    provides getTemps, getSeen, getOthers
   }
 
   global {
@@ -12,6 +12,14 @@ ruleset gossip {
 
     getTemps = function() {
       ent:temps
+    }
+
+    getSeen = function() {
+      ent:seen
+    }
+
+    getOthers = function() {
+      ent:others
     }
 
     getPeer = function() {
@@ -55,7 +63,7 @@ ruleset gossip {
       node_temps = temps{rid};
       hsn = (seen >< rid) => seen{rid} | -1;
       sn = node_temps.keys().filter(function(x) { x > hsn }).sort("numeric").head();
-      node_temps{sn}
+      node_temps{sn}.put("SensorID", meta:picoId)
     }
 
     needsSeen = function(id) {
@@ -81,6 +89,18 @@ ruleset gossip {
       path = [id, source_id];
       (sn == ent:others{path} + 1) => ent:others.put(path, sn) | ent:others
     }
+
+    addnewtemp = function(attrs) {
+      old = (ent:temps >< meta:picoId) => ent:temps{meta:picoId} | {};
+      mid = meta:picoId + ":" + ent:sequence_number.as("String");
+      new = old.put(ent:sequence_number, {
+        "MessageID": mid,
+        "SensorID": meta:picoId,
+        "Temperature": attrs{"temperature"},
+        "Timestamp": attrs{"timestamp"}
+      });
+      ent:temps.put(meta:picoId, new)
+    }
   }
 
   rule gossip_heartbeat {
@@ -100,6 +120,15 @@ ruleset gossip {
       ent:others := (message{"type"} == "rumor") => updateSeen(peer{"id"}, message) | ent:others
     } finally {
       schedule gossip event "heartbeat" at time:add(time:now(), {"seconds": ent:wait_seconds})
+    }
+  }
+
+  rule new_temp {
+    select when wovyn new_temperature_reading
+    always {
+      ent:seen := ent:seen.put(meta:picoId, ent:sequence_number);
+      ent:temps := addnewtemp(event:attrs);
+      ent:sequence_number := ent:sequence_number + 1
     }
   }
 
@@ -143,7 +172,7 @@ ruleset gossip {
     select when wrangler ruleset_added where rids >< meta:rid
     always {
       ent:sequence_number := 0;
-      ent:wait_seconds := 30;
+      ent:wait_seconds := 20;
       ent:seen := {};
       ent:ids := {};
       ent:temps := {};
