@@ -168,6 +168,17 @@ ruleset gossip {
     }
   }
 
+  rule update_wait {
+    select when gossip update
+    pre {
+      sn = event:attr("sequence_number")
+    }
+    if sn.isnull() then noop();
+    notfired {
+      ent:sequence_number := sn
+    }
+  }
+
   rule initialization {
     select when wrangler ruleset_added where rids >< meta:rid
     always {
