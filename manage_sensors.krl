@@ -76,7 +76,7 @@ ruleset manage_sensors {
     notfired {
       raise wrangler event "child_creation" attributes {
           "name": name,
-          "rids": ["temperature_store", "wovyn_base", "sensor_profile", "io.picolabs.subscription", "auto_accept"]
+          "rids": ["temperature_store", "wovyn_base", "sensor_profile", "io.picolabs.subscription", "auto_accept", "gossip"]
       }
     }
   }
