@@ -164,16 +164,32 @@ ruleset gossip {
 
   rule new_peer {
     select when wrangler subscription_added
-    foreach subs:established("Tx_role", "node") setting (node)
+    foreach subs:established("name", event:attr("name")) setting (node)
     pre {
-      eci = node{"Tx"};
-      nodeId = wrangler:skyQuery(eci, "gossip", "getId")
+      eci = node{"Tx"}
     }
-    if (not (ent:ids >< eci)) then noop();
-    fired {
-      ent:ids := ent:ids.put(eci, nodeId);
-      ent:others := (ent:others >< nodeId) => ent:others | ent:others.put(nodeId, {});
-      ent:temps := (ent:temps >< nodeId) => ent:temps | ent:temps.put(nodeId, {})
+    event:send({
+      "eci": eci,
+      "edi": "eid",
+      "domain": "gossip",
+      "type": "register",
+      "attrs": {
+        "eci": node{"Rx"},
+        "id": meta:picoId
+      }
+    })
+  }
+
+  rule register {
+    select when gossip register
+    pre {
+      eci = event:attr("eci");
+      id = event:attr("id")
+    }
+    always {
+      ent:ids := ent:ids.put(eci, id);
+      ent:others := (ent:others >< id) => ent:others | ent:others.put(id, {});
+      ent:temps := (ent:temps >< id) => ent:temps | ent:temps.put(id, {})
     }
   }
 
