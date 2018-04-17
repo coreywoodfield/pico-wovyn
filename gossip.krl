@@ -1,15 +1,17 @@
 ruleset gossip {
   meta {
     use module io.picolabs.subscription alias subs
-    shares getId, __testing
-    provides getTemps, getSeen, getOthers
+    shares getId, getTemps, getSeen, getOthers, __testing
+    provides getId
   }
 
   global {
     __testing = {
       "queries": [
         { "name": "getTemps" },
-        { "name": "getSeen" }
+        { "name": "getSeen" },
+        { "name": "getId" },
+        { "name": "getOthers" }
       ]
     }
 
@@ -167,7 +169,7 @@ ruleset gossip {
       eci = node{"Tx"};
       nodeId = wrangler:skyQuery(eci, "gossip", "getId")
     }
-    if (not (ent:ids.values() >< eci)) then noop();
+    if (not (ent:ids >< eci)) then noop();
     fired {
       ent:ids := ent:ids.put(eci, nodeId);
       ent:others := (ent:others >< nodeId) => ent:others | ent:others.put(nodeId, {});
