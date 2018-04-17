@@ -1,11 +1,18 @@
 ruleset gossip {
   meta {
     use module io.picolabs.subscription alias subs
-    shares getId
+    shares getId, __testing
     provides getTemps, getSeen, getOthers
   }
 
   global {
+    __testing = {
+      "queries": [
+        { "name": "getTemps" },
+        { "name": "getSeen" }
+      ]
+    }
+
     getId = function() {
       meta:picoId
     }
